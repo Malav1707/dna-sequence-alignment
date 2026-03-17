@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNA Sequence Alignment Output</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+    }
+    main {
+      width: 90%;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 5px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #e6e6e6;
+    }
+    .alignment {
+      background-color: #f4f4f4;
+      padding: 10px;
+      font-family: monospace;
+      border-radius: 4px;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #eee;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DNA Sequence Alignment Result</h1>
+  </header>
+  <main>
+    <section class="section">
+      <h2>1. Short Sequence Test</h2>
+      <table>
+        <tr><th>Algorithm</th><th>Time Taken (s)</th><th>Score</th></tr>
+        <tr><td>Needleman–Wunsch</td><td>0.000142</td><td>6</td></tr>
+        <tr><td>Smith–Waterman</td><td>0.000103</td><td>6</td></tr>
+      </table>
+      <h3>Alignment (Needleman–Wunsch)</h3>
+      <div class="alignment">
+        GATTACA<br>
+        GCATGCU
+      </div>
+      <h3>Alignment (Smith–Waterman)</h3>
+      <div class="alignment">
+        GATT<br>
+        GCAT
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>2. Long Sequence Test</h2>
+      <table>
+        <tr><th>Algorithm</th><th>Time Taken (s)</th><th>Score</th></tr>
+        <tr><td>Needleman–Wunsch</td><td>0.00251</td><td>48</td></tr>
+        <tr><td>Smith–Waterman</td><td>0.00186</td><td>52</td></tr>
+      </table>
+      <h3>Alignment (Partial)</h3>
+      <div class="alignment">
+        CTCCCGGGTTTACGTACGTACGTGTGCGACT<br>
+        ATGACTGTAGCGTTCGTACGTACGTTCATTG
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3. Summary</h2>
+      <p><strong>Needleman–Wunsch</strong> is used for <em>global alignment</em> (entire sequence), while <strong>Smith–Waterman</strong> focuses on <em>local alignment</em> (best matching region).</p>
+      <ul>
+        <li>Needleman–Wunsch is slower but aligns full sequences.</li>
+        <li>Smith–Waterman is faster and finds best matching subsequences.</li>
+      </ul>
+    </section>
+  </main>
+
+</body>
+</html>
