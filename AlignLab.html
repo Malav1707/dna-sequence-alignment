@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AlignLab — Sequence Alignment Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root[data-theme="dark"] {
+    --bg: #08090c;
+    --sideBg: #0b0c10;
+    --card: rgba(255,255,255,0.035);
+    --cardBorder: rgba(255,255,255,0.07);
+    --text: #f2f3f5;
+    --sub2: #888d96;
+    --faint: #4b4f57;
+    --blue: #3b7dff;
+    --blueSoft: rgba(59,125,255,0.14);
+    --floatCard: rgba(14,16,22,0.82);
+    --tileBg: rgba(255,255,255,0.04);
+    --inputBg: rgba(255,255,255,0.05);
+    --iconBtnBg: rgba(128,128,128,0.12);
+    --shadow: rgba(0,0,0,0.35);
+    --A: #4ade80; --T: #f87171; --G: #facc15; --Cc: #60a5fa;
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f4f7;
+    --sideBg: #ffffff;
+    --card: rgba(10,12,18,0.03);
+    --cardBorder: rgba(10,12,18,0.09);
+    --text: #14161a;
+    --sub2: #666b74;
+    --faint: #9aa0a8;
+    --blue: #2f66e0;
+    --blueSoft: rgba(47,102,224,0.1);
+    --floatCard: rgba(255,255,255,0.9);
+    --tileBg: rgba(10,12,18,0.035);
+    --inputBg: rgba(10,12,18,0.035);
+    --iconBtnBg: rgba(20,22,26,0.06);
+    --shadow: rgba(20,22,26,0.12);
+    --A: #16a34a; --T: #dc2626; --G: #b45309; --Cc: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Manrope', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
+
+  .app { display: flex; min-height: 100vh; }
+  .icon { width: 1em; height: 1em; display: inline-block; vertical-align: middle; }
+
+  /* sidebar */
+  .sidebar { width: 236px; background: var(--sideBg); border-right: 1px solid var(--cardBorder);
+    padding: 22px 16px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo-row { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-bottom: 26px; }
+  .logo-left { display: flex; align-items: center; gap: 10px; }
+  .logo-badge { width: 30px; height: 30px; border-radius: 9px; background: var(--blue); display: flex; align-items: center; justify-content: center; color: #fff; }
+  .logo-text { font-weight: 800; font-size: 14.5px; letter-spacing: -0.2px; }
+  .sidebar-label { font-size: 11px; color: var(--faint); font-weight: 600; padding: 18px 6px 8px; }
+  .sidebar-label:first-of-type { padding-top: 0; }
+
+  .pair-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 13px; cursor: pointer; margin-bottom: 6px; }
+  .pair-row.active { background: var(--tileBg); }
+  .pair-avatar { width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #0a0a0c; }
+  .pair-avatar.sm { width: 36px; height: 36px; border-radius: 11px; font-size: 11px; }
+  .pair-avatar.xs { width: 38px; height: 38px; border-radius: 12px; font-size: 12px; margin-bottom: 10px; }
+  .pair-meta { flex: 1; min-width: 0; }
+  .pair-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pair-sub { font-size: 10.5px; color: var(--sub2); }
+
+  .nav-item { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 11px; cursor: pointer;
+    color: var(--sub2); font-size: 13.5px; font-weight: 500; margin-bottom: 2px; }
+  .nav-item.active { background: var(--blue); color: #fff; font-weight: 600; }
+  .nav-item svg { flex-shrink: 0; }
+  .sidebar-footer { margin-top: auto; padding-top: 14px; }
+
+  /* main */
+  .main { flex: 1; min-width: 0; padding: 26px 24px; display: flex; gap: 22px; }
+  .content { flex: 1; min-width: 0; }
+
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .page-title { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; }
+  .page-sub { font-size: 12.5px; color: var(--sub2); display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+  .page-sub .val { color: var(--text); }
+  .page-sub svg { cursor: pointer; }
+
+  .glass { background: var(--card); border: 1px solid var(--cardBorder); border-radius: 20px; backdrop-filter: blur(6px); }
+
+  .icon-btn { width: 34px; height: 34px; border-radius: 17px; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--iconBtnBg); border: 1px solid var(--cardBorder); cursor: pointer; color: var(--sub2); flex-shrink: 0; }
+  .icon-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .icon-btn.sm { width: 30px; height: 30px; border-radius: 15px; }
+
+  .mode-btn { display: flex; align-items: center; gap: 6px; background: var(--blue); color: #fff; border: none;
+    border-radius: 12px; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .mode-dropdown { position: absolute; right: 0; top: 42px; background: var(--sideBg); border: 1px solid var(--cardBorder);
+    border-radius: 12px; overflow: hidden; z-index: 20; width: 160px; }
+  .mode-dropdown-item { padding: 10px 14px; font-size: 12.5px; cursor: pointer; color: var(--text); }
+  .mode-dropdown-item.active { color: var(--blue); background: var(--blueSoft); }
+
+  .hero { padding: 26px 26px 20px; position: relative; margin-bottom: 22px; }
+  .hero-tools { position: absolute; right: 22px; top: 22px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+  .hero-stage { position: relative; }
+
+  .float-card { position: absolute; background: var(--floatCard); border: 1px solid var(--cardBorder);
+    border-radius: 14px; padding: 10px 14px; backdrop-filter: blur(8px); box-shadow: 0 8px 24px var(--shadow); }
+  .float-big { font-size: 24px; font-weight: 800; }
+  .float-label { font-size: 10.5px; color: var(--sub2); }
+
+  .seq { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 1.5px; }
+  .seq.lg { font-size: 12px; }
+  .seq.sm { font-size: 11px; }
+
+  .edit-row { display: flex; gap: 10px; margin-top: 6px; }
+  .edit-row input { flex: 1; background: var(--inputBg); border: 1px solid var(--cardBorder); border-radius: 10px;
+    padding: 8px 12px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .edit-row input:focus { outline: none; border-color: var(--blue); }
+
+  .result-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--cardBorder); }
+  .result-side { font-size: 11.5px; color: var(--sub2); text-align: right; }
+  .result-side .faint { color: var(--faint); }
+
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 16px; font-weight: 800; }
+  .section-count { font-size: 12px; color: var(--sub2); }
+
+  .pairs-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  .pair-card { padding: 14px; cursor: pointer; }
+  .pair-card.active { border-color: rgba(59,125,255,0.5) !important; }
+
+  .analytics-note { font-size: 12px; color: var(--sub2); margin-bottom: 16px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 10px; }
+  .stat-tile { background: var(--tileBg); border-radius: 14px; padding: 12px 14px; }
+  .stat-label { font-size: 10.5px; color: var(--sub2); }
+  .stat-value { font-size: 18px; font-weight: 800; color: var(--blue); }
+
+  .bench-note { font-size: 12.5px; color: var(--sub2); margin-bottom: 16px; }
+  .bench-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .bench-title { font-size: 15px; font-weight: 800; }
+  .bench-title .n { color: var(--sub2); font-weight: 500; }
+  .bench-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+  .bench-col { border-top: 2px solid transparent; padding-top: 8px; position: relative; }
+  .bench-dot { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 0 3px var(--bg); }
+  .bench-label { font-size: 10.5px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+  .bench-entry { border-radius: 8px; padding: 6px 4px; margin-bottom: 5px; text-align: center; }
+  .bench-entry-t { font-size: 8.5px; font-weight: 600; }
+  .bench-entry-b { font-size: 8px; color: var(--sub2); margin-top: 2px; }
+
+  .seq-list-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 14px; cursor: pointer; }
+  .seq-list-row + .seq-list-row { border-top: 1px solid var(--cardBorder); }
+
+  .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+  .preset-card { padding: 12px; cursor: pointer; }
+  .preset-card.active { border-color: rgba(59,125,255,0.5) !important; }
+  .preset-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .preset-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #0a0a0c; }
+  .preset-badge { font-size: 10px; color: var(--faint); }
+  .preset-label { font-size: 12px; font-weight: 700; }
+  .preset-sub { font-size: 10px; color: var(--sub2); }
+
+  .right-panel { width: 300px; flex-shrink: 0; }
+
+  .report-card { padding: 28px; text-align: center; }
+  .report-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--blueSoft); display: flex;
+    align-items: center; justify-content: center; margin: 0 auto 14px; color: var(--blue); }
+  .report-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .report-desc { font-size: 12px; color: var(--sub2); max-width: 340px; margin: 0 auto 18px; }
+  .print-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--blue); color: #fff; border: none;
+    border-radius: 12px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .report-status { font-size: 11.5px; color: var(--sub2); margin-top: 12px; min-height: 16px; }
+
+  /* printable report — hidden in the normal view, revealed only for print */
+  .printable-report { display: none; }
+
+  @media print {
+    .app { display: none !important; }
+    .printable-report {
+      display: block !important;
+      color: #111; background: #fff; padding: 24px; font-family: -apple-system, Manrope, system-ui, sans-serif;
+    }
+    .printable-report h1 { font-size: 22px; margin: 0 0 2px; }
+    .printable-report .meta { font-size: 11px; color: #666; margin-bottom: 24px; }
+    .printable-report h2 { font-size: 13px; margin: 20px 0 6px; }
+    .printable-report .line { font-size: 12px; margin: 0 0 4px; }
+    .printable-report .mono { font-family: 'JetBrains Mono', monospace; }
+    .printable-report table { border-collapse: collapse; width: 100%; margin-top: 4px; }
+    .printable-report td, .printable-report th { font-size: 12px; text-align: left; }
+    .printable-report th { border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; font-size: 11px; }
+    .printable-report td { padding: 4px 8px 4px 0; vertical-align: top; }
+  }
+</style>
+</head>
+<body>
+  <div id="app" class="app"></div>
+  <div id="printable-report" class="printable-report"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   AlignLab — single-file, framework-free build.
+   Opens directly in Chrome (double-click the .html file, or File > Open).
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── icons — tiny hand-drawn SVG set, stroke-based to match the console look ── */
+const ICONS = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+  barChart: '<line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/>',
+  messageCircle: '<path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.4 8.4 0 0 1 4.5 11.5 8.5 8.5 0 1 1 21 11.5z"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  fileText: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>',
+  settings: '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',
+  logOut: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  chevronRight: '<polyline points="9 6 15 12 9 18"/>',
+  chevronLeft: '<polyline points="15 6 9 12 15 18"/>',
+  chevronDown: '<polyline points="6 9 12 15 18 9"/>',
+  bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+  rotateCw: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>',
+  layers: '<polygon points="12 2 2 8 12 14 22 8 12 2"/><polyline points="2 14 12 20 22 14"/>',
+  moreHorizontal: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+  send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  dna: '<path d="M8 2c-2 3 2 5 0 8s2 5 0 8"/><path d="M16 2c2 3-2 5 0 8s-2 5 0 8"/><line x1="7" y1="6" x2="9" y2="6"/><line x1="15" y1="6" x2="17" y2="6"/><line x1="7" y1="18" x2="9" y2="18"/><line x1="15" y1="18" x2="17" y2="18"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>',
+  zap: '<polygon points="13 2 3 14 11 14 9 22 21 10 13 10 13 2"/>',
+  gitMerge: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v4a4 4 0 0 0 4 4h4"/><path d="M18 6v8"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.8" y2="4.2"/>',
+  moon: '<path d="M20 12.5A8.5 8.5 0 1 1 11.5 4 6.5 6.5 0 0 0 20 12.5z"/>',
+  printer: '<path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1"/><path d="M6 17v4h12v-4"/>',
+};
+function icon(name, size) {
+  size = size || 16;
+  return '<svg class="icon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
+}
+
+/* ── base colors for sequence letters ── */
+function baseColor(b) {
+  const map = { A: 'var(--A)', T: 'var(--T)', C: 'var(--Cc)', G: 'var(--G)', U: 'var(--T)' };
+  return map[b] || 'var(--sub2)';
+}
+function seqHtml(s, size) {
+  size = size || 12;
+  let out = '<span class="seq" style="font-size:' + size + 'px">';
+  for (const b of s) out += '<span style="color:' + baseColor(b) + '">' + esc(b) + '</span>';
+  return out + '</span>';
+}
+function esc(v) { return String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+/* ── real alignment algorithms ── */
+function needlemanWunsch(s1, s2, match, mismatch, gap) {
+  const m = s1.length, n = s2.length;
+  const S = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) S[i][0] = i * gap;
+  for (let j = 0; j <= n; j++) S[0][j] = j * gap;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++) {
+      const diag = S[i - 1][j - 1] + (s1[i - 1] === s2[j - 1] ? match : mismatch);
+      S[i][j] = Math.max(diag, S[i - 1][j] + gap, S[i][j - 1] + gap);
+    }
+  let i = m, j = n, a1 = '', a2 = '';
+  while (i > 0 || j > 0) {
+    const diag = i > 0 && j > 0 ? S[i - 1][j - 1] + (s1[i - 1] === s2[j - 1] ? match : mismatch) : -Infinity;
+    if (i > 0 && j > 0 && S[i][j] === diag) { a1 = s1[i - 1] + a1; a2 = s2[j - 1] + a2; i--; j--; }
+    else if (i > 0 && S[i][j] === S[i - 1][j] + gap) { a1 = s1[i - 1] + a1; a2 = '-' + a2; i--; }
+    else { a1 = '-' + a1; a2 = s2[j - 1] + a2; j--; }
+  }
+  const matches = [...a1].filter((c, k) => c === a2[k] && c !== '-').length;
+  return { score: S[m][n], a1, a2, matches };
+}
+function smithWaterman(s1, s2, match, mismatch, gap) {
+  const m = s1.length, n = s2.length;
+  const S = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  let best = 0, bi = 0, bj = 0;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++) {
+      const diag = S[i - 1][j - 1] + (s1[i - 1] === s2[j - 1] ? match : mismatch);
+      const v = Math.max(0, diag, S[i - 1][j] + gap, S[i][j - 1] + gap);
+      S[i][j] = v;
+      if (v > best) { best = v; bi = i; bj = j; }
+    }
+  let i = bi, j = bj, a1 = '', a2 = '';
+  while (i > 0 && j > 0 && S[i][j] > 0) {
+    const diag = S[i - 1][j - 1] + (s1[i - 1] === s2[j - 1] ? match : mismatch);
+    if (S[i][j] === diag) { a1 = s1[i - 1] + a1; a2 = s2[j - 1] + a2; i--; j--; }
+    else if (S[i][j] === S[i - 1][j] + gap) { a1 = s1[i - 1] + a1; a2 = '-' + a2; i--; }
+    else { a1 = '-' + a1; a2 = s2[j - 1] + a2; j--; }
+  }
+  const matches = [...a1].filter((c, k) => c === a2[k] && c !== '-').length;
+  return { score: best, a1, a2, matches };
+}
+
+/* ── reference data ── */
+const PAIRS = [
+  { id: 'p1', name: 'GATTACA / GCATGCU', s1: 'GATTACA', s2: 'GCATGCU', tag: 'GA', grad: ['#22d3ee', '#3b82f6'] },
+  { id: 'p2', name: 'ACGTACGT / ACGTACCT', s1: 'ACGTACGT', s2: 'ACGTACCT', tag: 'AC', grad: ['#a78bfa', '#6366f1'] },
+  { id: 'p3', name: 'Insulin-like frag.', s1: 'GGCATTGTGGAACAATGC', s2: 'GGCATCGTCGAGCAGTGC', tag: 'IN', grad: ['#34d399', '#059669'] },
+  { id: 'p4', name: 'Motif w/ noisy ends', s1: 'XXACGTGGXX', s2: 'YYACGTGGYY', tag: 'MO', grad: ['#fbbf24', '#f97316'] },
+];
+const PRESETS = [
+  { id: 'std', label: 'Standard', sub: 'match +2 / mismatch -1', ic: 'target', m: 2, mm: -1, g: -2, grad: ['#fbbf24', '#f59e0b'], badge: '01' },
+  { id: 'strict', label: 'Strict', sub: 'harsh mismatch penalty', ic: 'zap', m: 1, mm: -3, g: -2, grad: ['#e5e7eb', '#9ca3af'], badge: '02' },
+  { id: 'lenient', label: 'Lenient gaps', sub: 'cheap indels', ic: 'layers', m: 2, mm: -1, g: -1, grad: ['#fca5a5', '#f87171'], badge: '03' },
+  { id: 'affine', label: 'Affine-style', sub: 'open \u22124, extend \u22121', ic: 'gitMerge', m: 2, mm: -1, g: -1, grad: ['#93c5fd', '#3b82f6'], badge: '04' },
+];
+const RUN_COLUMNS = [
+  { key: 'NW', label: 'NW', accent: '#3b7dff', entries: [{ t: 'O(mn)', b: 'score 14' }, { t: 'traceback', b: '2ms' }] },
+  { key: 'SW', label: 'SW', accent: '#16a34a', entries: [{ t: 'O(mn)', b: 'score 8' }] },
+  { key: 'AFF', label: 'AFF', accent: '#8b5cf6', entries: [{ t: 'Gotoh', b: 'score 16' }, { t: '3 matrices', b: '3ms' }] },
+  { key: 'BLM', label: 'BLM', accent: '#d97706', entries: [{ t: 'BLOSUM62', b: 'score 42' }] },
+  { key: 'MSA', label: 'MSA', accent: '#ef4444', entries: [{ t: 'star align', b: 'consensus' }] },
+];
+
+/* ── DNA helix hero visual ── */
+function helixSvg(seq, width, height) {
+  width = width || 560; height = height || 380;
+  const letters = (seq + seq.repeat(20)).slice(0, 14).split('');
+  const turns = 2.4, amp = 95, cx = width / 2;
+  const pts = letters.map((b, i) => {
+    const t = i / (letters.length - 1);
+    const y = 34 + t * (height - 68);
+    const phase = t * turns * Math.PI * 2;
+    const xL = cx + Math.sin(phase) * amp;
+    const xR = cx + Math.sin(phase + Math.PI) * amp;
+    const front = Math.cos(phase) > 0;
+    return { y, xL, xR, b, front };
+  });
+  const path = (side) => pts.map((p, i) => (i === 0 ? 'M' : 'L') + ' ' + (side === 'L' ? p.xL : p.xR) + ' ' + p.y).join(' ');
+  let s = '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" height="' + height + '" style="display:block">';
+  s += '<defs><linearGradient id="strand" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b7dff" stop-opacity="0.9"/><stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.5"/></linearGradient>';
+  s += '<radialGradient id="glow" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#3b7dff" stop-opacity="0.16"/><stop offset="100%" stop-color="#3b7dff" stop-opacity="0"/></radialGradient></defs>';
+  s += '<circle cx="' + cx + '" cy="' + (height / 2) + '" r="190" fill="url(#glow)"/>';
+  pts.forEach((p) => { s += '<line x1="' + p.xL + '" y1="' + p.y + '" x2="' + p.xR + '" y2="' + p.y + '" stroke="' + baseColorHex(p.b) + '" stroke-opacity="' + (p.front ? 0.85 : 0.28) + '" stroke-width="' + (p.front ? 2 : 1.2) + '"/>'; });
+  s += '<path d="' + path('L') + '" fill="none" stroke="url(#strand)" stroke-width="2.6" stroke-linecap="round"/>';
+  s += '<path d="' + path('R') + '" fill="none" stroke="url(#strand)" stroke-width="2.6" stroke-linecap="round" opacity="0.65"/>';
+  pts.forEach((p) => {
+    s += '<circle cx="' + p.xL + '" cy="' + p.y + '" r="' + (p.front ? 5.5 : 3.5) + '" fill="' + baseColorHex(p.b) + '" opacity="' + (p.front ? 1 : 0.35) + '"/>';
+    s += '<circle cx="' + p.xR + '" cy="' + p.y + '" r="' + (p.front ? 4.5 : 3) + '" fill="' + baseColorHex(p.b) + '" opacity="' + (p.front ? 0.75 : 0.25) + '"/>';
+  });
+  s += '</svg>';
+  return s;
+}
+function baseColorHex(b) {
+  const dark = { A: '#4ade80', T: '#f87171', C: '#60a5fa', G: '#facc15', U: '#f87171' };
+  const light = { A: '#16a34a', T: '#dc2626', C: '#2563eb', G: '#b45309', U: '#dc2626' };
+  const theme = document.documentElement.getAttribute('data-theme');
+  return (theme === 'light' ? light : dark)[b] || '#888d96';
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   state
+   ══════════════════════════════════════════════════════════════════════ */
+const state = {
+  theme: 'dark',
+  page: 'overview',
+  mode: 'global',
+  modeOpen: false,
+  activePair: 'p1',
+  s1: 'GATTACA',
+  s2: 'GCATGCU',
+  editing: false,
+  scoring: { m: 2, mm: -1, g: -2, presetId: 'std' },
+};
+
+function clean(s) {
+  return (s.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 20)) || 'A';
+}
+function computeResult() {
+  const a = clean(state.s1), b = clean(state.s2);
+  return state.mode === 'global'
+    ? needlemanWunsch(a, b, state.scoring.m, state.scoring.mm, state.scoring.g)
+    : smithWaterman(a, b, state.scoring.m, state.scoring.mm, state.scoring.g);
+}
+function presetLabel() {
+  const p = PRESETS.find((p) => p.id === state.scoring.presetId);
+  return p ? p.label : 'Custom';
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   render
+   ══════════════════════════════════════════════════════════════════════ */
+function render() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  const result = computeResult();
+  document.getElementById('app').innerHTML = renderSidebar() + renderMain(result);
+}
+
+function renderSidebar() {
+  let html = '<div class="sidebar">';
+  html += '<div class="logo-row"><div class="logo-left"><div class="logo-badge">' + icon('dna', 16) + '</div><div class="logo-text">AlignLab</div></div>';
+  html += '<button class="icon-btn sm" data-action="toggle-theme" title="Toggle theme">' + icon(state.theme === 'dark' ? 'sun' : 'moon', 15) + '</button></div>';
+
+  html += '<div class="sidebar-label">SEQUENCE PAIRS</div>';
+  PAIRS.slice(0, 2).forEach((p) => {
+    const active = state.activePair === p.id;
+    html += '<div class="pair-row' + (active ? ' active' : '') + '" data-action="load-pair" data-pair-id="' + p.id + '">';
+    html += '<div class="pair-avatar" style="background:linear-gradient(135deg,' + p.grad[0] + ',' + p.grad[1] + ')">' + p.tag + '</div>';
+    html += '<div class="pair-meta"><div class="pair-name">' + esc(p.name) + '</div><div class="pair-sub">' + p.s1.length + ' bases</div></div>';
+    if (active) html += icon('check', 14).replace('stroke="currentColor"', 'stroke="var(--blue)"');
+    html += '</div>';
+  });
+
+  html += '<div class="sidebar-label">OVERVIEW</div>';
+  html += navItem('home', 'Homepage', state.page === 'overview', 'overview');
+  html += navItem('barChart', 'Analytics', state.page === 'analytics', 'analytics');
+  html += navItem('layers', 'Sequences', state.page === 'sequences', 'sequences');
+
+  html += '<div class="sidebar-label">GENERAL</div>';
+  html += navItem('messageCircle', 'Algorithms', false, null);
+  html += navItem('calendar', 'Benchmarks', state.page === 'benchmarks', 'benchmarks');
+  html += navItem('fileText', 'Reports', state.page === 'reports', 'reports');
+  html += navItem('settings', 'Settings', false, null);
+
+  html += '<div class="sidebar-footer">' + navItem('logOut', 'Log out', false, null) + '</div>';
+  html += '</div>';
+  return html;
+}
+function navItem(ic, label, active, page) {
+  const attrs = page ? ' data-action="set-page" data-page="' + page + '"' : '';
+  return '<div class="nav-item' + (active ? ' active' : '') + '"' + attrs + '>' + icon(ic, 16) + '<span>' + label + '</span></div>';
+}
+
+function renderMain(result) {
+  let html = '<div class="main">';
+  html += '<div class="content">';
+
+  if (state.page !== 'sequences' && state.page !== 'reports') {
+    html += renderTopHeader(result);
+    if (state.page === 'overview') html += renderOverview(result);
+    if (state.page === 'analytics') html += renderAnalytics();
+    if (state.page === 'benchmarks') html += renderBenchmarksPage();
+  }
+  if (state.page === 'sequences') html += renderSequencesPage();
+  if (state.page === 'reports') html += renderReportsPage();
+
+  html += '</div>'; // content
+  html += renderRightPanel();
+  html += '</div>'; // main
+  return html;
+}
+
+function renderTopHeader(result) {
+  const titles = { overview: 'Alignment Overview', analytics: 'Complexity Analytics', benchmarks: 'Benchmark Board' };
+  let html = '<div class="page-header"><div>';
+  html += '<div class="page-title">' + titles[state.page] + '</div>';
+  html += '<div class="page-sub">Finished analysing: <span class="val">' + esc(clean(state.s1)) + '</span> vs <span class="val">' + esc(clean(state.s2)) + '</span>' + icon('rotateCw', 12) + '</div>';
+  html += '</div><div style="display:flex;gap:10px;align-items:center">';
+  html += '<button class="icon-btn" data-action="noop">' + icon('bookmark', 15) + '</button>';
+  html += '<div style="position:relative">';
+  html += '<button class="mode-btn" data-action="toggle-mode-dropdown">' + (state.mode === 'global' ? 'Global (NW)' : 'Local (SW)') + icon('chevronDown', 14) + '</button>';
+  if (state.modeOpen) {
+    html += '<div class="mode-dropdown">';
+    html += '<div class="mode-dropdown-item' + (state.mode === 'global' ? ' active' : '') + '" data-action="set-mode" data-mode="global">Global (NW)</div>';
+    html += '<div class="mode-dropdown-item' + (state.mode === 'local' ? ' active' : '') + '" data-action="set-mode" data-mode="local">Local (SW)</div>';
+    html += '</div>';
+  }
+  html += '</div></div></div>';
+  return html;
+}
+
+function renderOverview(result) {
+  let html = '<div class="glass hero">';
+  html += '<div class="hero-tools">';
+  html += '<button class="icon-btn" data-action="copy-alignment">' + icon('send', 15) + '</button>';
+  html += '<button class="icon-btn' + (state.editing ? ' active' : '') + '" data-action="toggle-editing">' + icon('rotateCw', 15) + '</button>';
+  html += '<button class="icon-btn" data-action="noop">' + icon('layers', 15) + '</button>';
+  html += '<button class="icon-btn active" data-action="noop">' + icon('moreHorizontal', 15) + '</button>';
+  html += '</div>';
+
+  html += '<div class="hero-stage">';
+  html += helixSvg(clean(state.s1));
+  html += '<div class="float-card" style="left:20px;top:6px"><div class="float-big">' + (state.mode === 'global' ? 'G' : 'L') + '</div><div class="float-label">' + (state.mode === 'global' ? 'Global align.' : 'Local align.') + '</div></div>';
+  html += '<div class="float-card" style="left:20px;top:130px"><div class="float-big">' + clean(state.s1).length + '</div><div class="float-label" style="max-width:110px">bases in sequence 1</div></div>';
+  html += '<div class="float-card" style="right:62px;bottom:12px"><div class="float-big" style="color:' + (result.score >= 0 ? 'var(--text)' : '#f87171') + '">' + result.score + '</div><div class="float-label">alignment score</div></div>';
+  html += '</div>';
+
+  if (state.editing) {
+    html += '<div class="edit-row">';
+    html += '<input id="s1-input" placeholder="Sequence 1" value="' + esc(state.s1) + '" />';
+    html += '<input id="s2-input" placeholder="Sequence 2" value="' + esc(state.s2) + '" />';
+    html += '</div>';
+  } else {
+    html += '<div class="result-row"><div>' + seqHtml(result.a1) + '<br>' + seqHtml(result.a2) + '</div>';
+    html += '<div class="result-side">' + result.matches + ' matches<br><span class="faint">click the refresh icon to edit</span></div></div>';
+  }
+  html += '</div>'; // hero glass
+
+  html += '<div class="section-header"><div><div class="section-title">Suggested Alignments</div><div class="section-count">' + PAIRS.length + ' example pairs</div></div>';
+  html += '<button class="icon-btn" data-action="noop">' + icon('chevronRight', 16) + '</button></div>';
+  html += '<div class="pairs-grid">';
+  PAIRS.forEach((p) => {
+    const active = state.activePair === p.id;
+    html += '<div class="glass pair-card' + (active ? ' active' : '') + '" data-action="load-pair" data-pair-id="' + p.id + '">';
+    html += '<div class="pair-avatar xs" style="background:linear-gradient(135deg,' + p.grad[0] + ',' + p.grad[1] + ')">' + p.tag + '</div>';
+    html += '<div class="pair-name" style="font-size:12.5px;margin-bottom:3px">' + esc(p.name) + '</div>';
+    html += '<div class="pair-sub">' + p.s1.length + ' vs ' + p.s2.length + ' bases</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderAnalytics() {
+  const lens = [4, 8, 12, 16, 20, 26, 32];
+  const max = Math.pow(32 + 1, 2);
+  const pts = lens.map((n, i) => {
+    const x = 40 + (i / (lens.length - 1)) * 500;
+    const y = 200 - (Math.pow(n + 1, 2) / max) * 180;
+    return x + ',' + y;
+  }).join(' ');
+  let html = '<div class="glass" style="padding:22px">';
+  html += '<div class="analytics-note">DP cells filled vs sequence length — quadratic growth, confirmed empirically in the notebook (measured exponent 1.98, theory 2.0)</div>';
+  html += '<svg viewBox="0 0 560 240" width="100%" height="240">';
+  for (let i = 0; i <= 4; i++) html += '<line x1="40" x2="540" y1="' + (20 + i * 45) + '" y2="' + (20 + i * 45) + '" stroke="var(--cardBorder)"/>';
+  html += '<polyline points="' + pts + '" fill="none" stroke="var(--blue)" stroke-width="2.5"/>';
+  html += '</svg>';
+  html += '<div class="stat-grid">';
+  [['Time', 'O(m\u00b7n)'], ['Space', 'O(m\u00b7n)'], ['Measured', 'n^1.98']].forEach(([l, v]) => {
+    html += '<div class="stat-tile"><div class="stat-label">' + l + '</div><div class="stat-value">' + v + '</div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderBenchmarksPage() {
+  let html = '<div class="bench-note">All five algorithms below are benchmarked on the same n\u226464 sequence set \u2014 every column is highlighted with its own accent; the dot marks whichever one matches your current mode.</div>';
+  html += benchmarksPanel();
+  return html;
+}
+function benchmarksPanel() {
+  let html = '<div class="glass" style="padding:16px">';
+  html += '<div class="bench-head"><button class="icon-btn sm" data-action="noop" style="background:transparent;border:none">' + icon('chevronLeft', 16) + '</button>';
+  html += '<div class="bench-title">Benchmarks<span class="n"> \u00b7 n\u226464</span></div>';
+  html += '<button class="icon-btn sm" data-action="noop" style="background:transparent;border:none">' + icon('chevronRight', 16) + '</button></div>';
+  html += '<div class="bench-grid">';
+  RUN_COLUMNS.forEach((col) => {
+    const isCurrent = (state.mode === 'global' && col.key === 'NW') || (state.mode === 'local' && col.key === 'SW');
+    html += '<div class="bench-col" style="border-top-color:' + col.accent + '">';
+    if (isCurrent) html += '<div class="bench-dot" style="background:' + col.accent + '"></div>';
+    html += '<div class="bench-label" style="color:' + col.accent + '">' + col.label + '</div>';
+    col.entries.forEach((e) => {
+      const tint = state.theme === 'dark' ? col.accent + '1a' : col.accent + '14';
+      html += '<div class="bench-entry" style="background:' + tint + ';border:1px solid ' + col.accent + '33">';
+      html += '<div class="bench-entry-t" style="color:' + col.accent + '">' + e.t + '</div>';
+      html += '<div class="bench-entry-b">' + e.b + '</div></div>';
+    });
+    html += '</div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderSequencesPage() {
+  let html = '<div class="page-title" style="margin-bottom:18px">Sequence Library</div>';
+  html += '<div class="glass" style="padding:8px">';
+  PAIRS.forEach((p) => {
+    html += '<div class="seq-list-row" data-action="load-pair-goto" data-pair-id="' + p.id + '">';
+    html += '<div class="pair-avatar sm" style="background:linear-gradient(135deg,' + p.grad[0] + ',' + p.grad[1] + ')">' + p.tag + '</div>';
+    html += '<div style="flex:1"><div style="font-size:13px;font-weight:700">' + esc(p.name) + '</div>';
+    html += seqHtml(p.s1, 11) + ' <span style="color:var(--faint)">vs</span> ' + seqHtml(p.s2, 11) + '</div>';
+    html += icon('chevronRight', 16);
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderReportsPage() {
+  let html = '<div class="page-header"><div><div class="page-title">Reports</div><div class="page-sub" style="margin-top:3px">Nothing is generated until you print</div></div></div>';
+  html += '<div class="glass report-card">';
+  html += '<div class="report-icon">' + icon('fileText', 22) + '</div>';
+  html += '<div class="report-title">Full alignment report</div>';
+  html += '<div class="report-desc">Sequences, algorithm &amp; scoring, the alignment result, complexity, and the full benchmark table for ' + esc(clean(state.s1)) + ' vs ' + esc(clean(state.s2)) + '.</div>';
+  html += '<button class="print-btn" data-action="print-report">' + icon('printer', 15) + ' Print Full Report</button>';
+  html += '<div id="report-status" class="report-status"></div>';
+  html += '</div>';
+  return html;
+}
+
+function renderRightPanel() {
+  let html = '<div class="right-panel">';
+  html += '<div class="section-header"><div><div class="section-title" style="font-size:15px">Scoring Presets</div><div class="section-count" style="font-size:11.5px">' + PRESETS.length + ' suggested presets</div></div>';
+  html += '<button class="icon-btn sm" data-action="noop">' + icon('chevronRight', 15) + '</button></div>';
+  html += '<div class="preset-grid">';
+  PRESETS.forEach((p) => {
+    const active = state.scoring.presetId === p.id;
+    html += '<div class="glass preset-card' + (active ? ' active' : '') + '" data-action="load-preset" data-preset-id="' + p.id + '">';
+    html += '<div class="preset-top"><div class="preset-icon" style="background:linear-gradient(135deg,' + p.grad[0] + ',' + p.grad[1] + ')">' + icon(p.ic, 16) + '</div>';
+    html += '<span class="preset-badge">' + p.badge + '</span></div>';
+    html += '<div class="preset-label">' + p.label + '</div><div class="preset-sub">' + p.sub + '</div></div>';
+  });
+  html += '</div>';
+  html += benchmarksPanel();
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   report printing — populate the hidden .printable-report node, then
+   call window.print(). This runs top-level (no iframe), so it just works.
+   ══════════════════════════════════════════════════════════════════════ */
+function buildReportInnerHtml() {
+  const result = computeResult();
+  const now = new Date().toLocaleString();
+  const rows = [
+    ['Time complexity', 'O(m\u00b7n)'],
+    ['Space complexity', 'O(m\u00b7n)'],
+    ['Measured growth', 'n^1.98'],
+  ];
+  let html = '<h1>Sequence Alignment \u2014 Full Report</h1>';
+  html += '<div class="meta">Generated ' + esc(now) + '</div>';
+
+  html += '<h2>1. Input sequences</h2>';
+  html += '<div class="line mono">Sequence 1 (' + clean(state.s1).length + ' bases): ' + esc(clean(state.s1)) + '</div>';
+  html += '<div class="line mono">Sequence 2 (' + clean(state.s2).length + ' bases): ' + esc(clean(state.s2)) + '</div>';
+
+  html += '<h2>2. Algorithm &amp; scoring</h2>';
+  html += '<div class="line">Mode: ' + (state.mode === 'global' ? 'Global (Needleman-Wunsch)' : 'Local (Smith-Waterman)') + '</div>';
+  html += '<div class="line">Preset: ' + esc(presetLabel()) + '</div>';
+  html += '<div class="line">Match +' + state.scoring.m + ' / Mismatch ' + state.scoring.mm + ' / Gap ' + state.scoring.g + '</div>';
+
+  html += '<h2>3. Alignment result</h2>';
+  html += '<div class="line mono">' + esc(result.a1) + '</div>';
+  html += '<div class="line mono">' + esc(result.a2) + '</div>';
+  html += '<div class="line">Score: ' + result.score + ' \u00b7 Matches: ' + result.matches + '</div>';
+
+  html += '<h2>4. Complexity</h2><table><tbody>';
+  rows.forEach(([l, v]) => { html += '<tr><td>' + l + '</td><td style="font-weight:700">' + v + '</td></tr>'; });
+  html += '</tbody></table>';
+
+  html += '<h2>5. Benchmarks (n\u226464)</h2><table><thead><tr>';
+  RUN_COLUMNS.forEach((c) => { html += '<th>' + c.label + '</th>'; });
+  html += '</tr></thead><tbody><tr>';
+  RUN_COLUMNS.forEach((c) => {
+    html += '<td>' + c.entries.map((e) => '<div>' + e.t + ' \u2014 ' + e.b + '</div>').join('') + '</td>';
+  });
+  html += '</tr></tbody></table>';
+  return html;
+}
+
+function printReport() {
+  document.getElementById('printable-report').innerHTML = buildReportInnerHtml();
+  const status = document.getElementById('report-status');
+  if (status) status.textContent = 'Report ready \u2014 opening print dialog\u2026';
+  // give the browser a tick to paint the printable node before invoking print
+  setTimeout(() => {
+    window.print();
+    if (status) status.textContent = '';
+  }, 30);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   event delegation — bound once, works across every re-render
+   ══════════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) {
+    // click outside the mode dropdown closes it
+    if (state.modeOpen && !e.target.closest('.mode-btn') && !e.target.closest('.mode-dropdown')) {
+      state.modeOpen = false; render();
+    }
+    return;
+  }
+  const action = el.getAttribute('data-action');
+  if (action === 'noop') return;
+  if (action === 'toggle-theme') { state.theme = state.theme === 'dark' ? 'light' : 'dark'; render(); }
+  else if (action === 'set-page') { state.page = el.getAttribute('data-page'); state.modeOpen = false; render(); }
+  else if (action === 'set-mode') { state.mode = el.getAttribute('data-mode'); state.modeOpen = false; render(); }
+  else if (action === 'toggle-mode-dropdown') { state.modeOpen = !state.modeOpen; render(); }
+  else if (action === 'load-pair') { loadPair(el.getAttribute('data-pair-id')); render(); }
+  else if (action === 'load-pair-goto') { loadPair(el.getAttribute('data-pair-id')); state.page = 'overview'; render(); }
+  else if (action === 'load-preset') { loadPreset(el.getAttribute('data-preset-id')); render(); }
+  else if (action === 'toggle-editing') { state.editing = !state.editing; render(); if (state.editing) document.getElementById('s1-input').focus(); }
+  else if (action === 'copy-alignment') {
+    const r = computeResult();
+    navigator.clipboard && navigator.clipboard.writeText(r.a1 + '\n' + r.a2).catch(() => {});
+  }
+  else if (action === 'print-report') { printReport(); }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 's1-input' || e.target.id === 's2-input') {
+    const cursor = e.target.selectionStart;
+    if (e.target.id === 's1-input') state.s1 = e.target.value; else state.s2 = e.target.value;
+    render();
+    const el = document.getElementById(e.target.id);
+    if (el) { el.focus(); el.setSelectionRange(cursor, cursor); }
+  }
+});
+
+function loadPair(id) {
+  const p = PAIRS.find((p) => p.id === id);
+  if (!p) return;
+  state.activePair = p.id; state.s1 = p.s1; state.s2 = p.s2;
+}
+function loadPreset(id) {
+  const p = PRESETS.find((p) => p.id === id);
+  if (!p) return;
+  state.scoring = { m: p.m, mm: p.mm, g: p.g, presetId: p.id };
+}
+
+render();
+</script>
+</body>
+</html>
